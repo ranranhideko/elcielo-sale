@@ -98,6 +98,7 @@
   <button class="filter-btn" onclick="setFilter('SOLD',this)">SOLD</button>
   <input class="search" type="text" placeholder="🔍 番号・商品名・サイズ・カラー..." oninput="doSearch(this.value)">
   <span class="count" id="countLabel"></span>
+  <button class="add-btn" id="exportBtn" onclick="openExport()" style="display:none;background:#3d8b5f">📋 データ書き出し</button>
   <button class="add-btn" id="addBtn" onclick="openModal(null)" style="display:none">＋ 追加</button>
 </div>
 
@@ -158,6 +159,22 @@
       <button class="save-btn" onclick="saveItem()">保存する</button>
       <button class="cancel-btn" onclick="closeModal()">キャンセル</button>
       <button class="delete-btn" id="deleteBtn" onclick="deleteItem()" style="display:none">削除する</button>
+    </div>
+  </div>
+</div>
+
+<!-- データ書き出し（管理者用。写真などを追加した内容をClaudeに渡すため） -->
+<div class="overlay" id="exportOverlay" onclick="closeOutsideExport(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>データ書き出し</h2>
+      <button class="modal-close" onclick="closeExport()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="photo-hint">下の「コピーする」を押してから、Claudeとのチャットの入力欄に貼り付けて送ってください。</div>
+      <textarea id="exportText" style="height:220px;font-size:10px;line-height:1.4" readonly></textarea>
+      <button class="save-btn" onclick="copyExport()">📋 コピーする</button>
+      <button class="cancel-btn" onclick="closeExport()">閉じる</button>
     </div>
   </div>
 </div>
@@ -287,6 +304,29 @@ function toggleAdmin() {
   editMode = !editMode;
   document.getElementById("adminToggle").classList.toggle("on", editMode);
   document.getElementById("addBtn").style.display = editMode ? "inline-block" : "none";
+  document.getElementById("exportBtn").style.display = editMode ? "inline-block" : "none";
+}
+
+function openExport() {
+  document.getElementById("exportText").value = JSON.stringify(items);
+  document.getElementById("exportOverlay").classList.add("show");
+  setTimeout(() => document.getElementById("exportText").select(), 50);
+}
+function closeExport() { document.getElementById("exportOverlay").classList.remove("show"); }
+function closeOutsideExport(e) { if (e.target === document.getElementById("exportOverlay")) closeExport(); }
+function copyExport() {
+  const ta = document.getElementById("exportText");
+  ta.select();
+  ta.setSelectionRange(0, ta.value.length);
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(ta.value).then(() => alert("コピーしました。チャットに貼り付けてください。")).catch(() => {
+      document.execCommand('copy');
+      alert("コピーしました。チャットに貼り付けてください。");
+    });
+  } else {
+    document.execCommand('copy');
+    alert("コピーしました。チャットに貼り付けてください。");
+  }
 }
 
 function openDetail(id) {
